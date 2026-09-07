@@ -18,11 +18,11 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-property_type_enum = postgresql.ENUM("apartment", "room", "number", "house", name="propertytype")
-rental_type_enum = postgresql.ENUM("short_term", "long_term", name="rentaltype")
-booking_status_enum = postgresql.ENUM("pending", "active", "completed", "cancelled", name="bookingstatus")
-payment_status_enum = postgresql.ENUM("pending", "paid", "overdue", "cancelled", name="paymentstatus")
-payment_type_enum = postgresql.ENUM("rent", "deposit", "utility", "other", name="paymenttype")
+property_type_enum = postgresql.ENUM("apartment", "room", "number", "house", name="propertytype", create_type=False)
+rental_type_enum = postgresql.ENUM("short_term", "long_term", name="rentaltype", create_type=False)
+booking_status_enum = postgresql.ENUM("pending", "active", "completed", "cancelled", name="bookingstatus", create_type=False)
+payment_status_enum = postgresql.ENUM("pending", "paid", "overdue", "cancelled", name="paymentstatus", create_type=False)
+payment_type_enum = postgresql.ENUM("rent", "deposit", "utility", "other", name="paymenttype", create_type=False)
 
 
 def upgrade() -> None:

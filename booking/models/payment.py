@@ -18,8 +18,14 @@ class Payment(Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     booking_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bookings.id", ondelete="CASCADE"), index=True)
 
-    payment_type: Mapped[PaymentType] = mapped_column(SAEnum(PaymentType), default=PaymentType.RENT)
-    status: Mapped[PaymentStatus] = mapped_column(SAEnum(PaymentStatus), default=PaymentStatus.PENDING)
+    payment_type: Mapped[PaymentType] = mapped_column(
+        SAEnum(PaymentType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        default=PaymentType.RENT,
+    )
+    status: Mapped[PaymentStatus] = mapped_column(
+        SAEnum(PaymentStatus, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        default=PaymentStatus.PENDING,
+    )
 
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)      # когда должны заплатить

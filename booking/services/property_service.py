@@ -37,7 +37,7 @@ async def create_property(db: AsyncSession, owner_id: uuid.UUID, data: PropertyC
     prop = Property(owner_id=owner_id, **data.model_dump())
     db.add(prop)
     await db.commit()
-    await db.refresh(prop, attribute_names=["created_at", "updated_at"])
+    await db.refresh(prop, attribute_names=["created_at", "updated_at", "photos"])
     return prop
 
 
@@ -45,7 +45,14 @@ async def update_property(db: AsyncSession, prop: Property, data: PropertyUpdate
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(prop, field, value)
     await db.commit()
-    await db.refresh(prop, attribute_names=["updated_at"])
+    await db.refresh(prop, attribute_names=["updated_at", "photos"])
+    return prop
+
+
+async def archive_property(db: AsyncSession, prop: Property) -> Property:
+    prop.is_archived = True
+    await db.commit()
+    await db.refresh(prop, attribute_names=["updated_at", "photos"])
     return prop
 
 

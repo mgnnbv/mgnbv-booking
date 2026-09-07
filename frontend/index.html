@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mgnbvbooking — учёт аренды</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Экран авторизации -->
+  <div id="auth-screen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <h1 class="brand">mgnbvbooking</h1>
+      <p class="brand-sub">учёт аренды квартир и комнат</p>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Вход</button>
+        <button class="tab" data-tab="register">Регистрация</button>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <label>Телефон
+          <input type="text" name="phone" required autocomplete="username" placeholder="+7 900 000-00-00" />
+        </label>
+        <label>Пароль
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+        <div class="form-error" id="login-error"></div>
+        <button type="submit" class="btn btn-primary">Войти</button>
+      </form>
+
+      <form id="register-form" class="auth-form" hidden>
+        <label>Телефон *
+          <input type="text" name="phone" required minlength="5" maxlength="20" placeholder="+7 900 000-00-00" />
+        </label>
+        <label>Пароль *
+          <input type="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" />
+        </label>
+        <label>Имя
+          <input type="text" name="full_name" />
+        </label>
+        <label>Email
+          <input type="email" name="email" />
+        </label>
+        <div class="form-error" id="register-error"></div>
+        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Основной интерфейс -->
+  <div id="app-shell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand-mini">mgnbvbooking</div>
+      <nav class="nav">
+        <button class="nav-item" data-view="dashboard">Дашборд</button>
+        <button class="nav-item" data-view="properties">Объекты</button>
+        <button class="nav-item" data-view="bookings">Брони</button>
+        <button class="nav-item" data-view="tenants">Жильцы</button>
+        <button class="nav-item" data-view="overdue">Просрочки</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-name" id="user-name"></div>
+        <button id="logout-btn" class="btn btn-ghost">Выйти</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <h2 id="view-title">Дашборд</h2>
+      </header>
+      <div id="toast" class="toast" hidden></div>
+      <div id="view-root" class="view-root"></div>
+    </main>
+  </div>
+
+  <!-- Универсальное модальное окно -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button id="modal-close" class="modal-close">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

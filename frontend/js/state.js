@@ -1,0 +1,46 @@
+export const state = {
+  userDisplayName: "",
+  // Кэш id объекта/жильца -> название, чтобы не гонять лишние запросы там, где
+  // бэкенд не денормализует title (например, брони жильца или объекта).
+  propertyTitleCache: new Map(),
+  propertiesLoaded: false,
+  tenantNameCache: new Map(),
+  tenantsLoaded: false,
+};
+
+export function setUser(displayName) {
+  state.userDisplayName = displayName;
+  localStorage.setItem("mgnbv_user_display", displayName);
+}
+
+export function loadUser() {
+  state.userDisplayName = localStorage.getItem("mgnbv_user_display") || "";
+  return state.userDisplayName;
+}
+
+export function clearUser() {
+  state.userDisplayName = "";
+  localStorage.removeItem("mgnbv_user_display");
+}
+
+export function cacheProperties(properties) {
+  state.propertiesLoaded = true;
+  for (const p of properties) {
+    state.propertyTitleCache.set(p.id, p.title);
+  }
+}
+
+export function propertyTitle(id) {
+  return state.propertyTitleCache.get(id) || "Объект";
+}
+
+export function cacheTenants(tenants) {
+  state.tenantsLoaded = true;
+  for (const t of tenants) {
+    state.tenantNameCache.set(t.id, t.full_name);
+  }
+}
+
+export function tenantName(id) {
+  return state.tenantNameCache.get(id) || "Жилец";
+}

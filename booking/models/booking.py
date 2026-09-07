@@ -22,9 +22,14 @@ class Booking(Base):
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id", ondelete="RESTRICT"), index=True)
 
-    rental_type: Mapped[RentalType] = mapped_column(SAEnum(RentalType), nullable=False)
-    status: Mapped[BookingStatus] = mapped_column(SAEnum(BookingStatus), default=BookingStatus.PENDING)
-
+    rental_type: Mapped[RentalType] = mapped_column(
+        SAEnum(RentalType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        nullable=False,
+    )    
+    status: Mapped[BookingStatus] = mapped_column(
+        SAEnum(BookingStatus, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        default=BookingStatus.PENDING,
+    )
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     # NULL = длительная аренда без фиксированной даты окончания ("бессрочно").
     # Для проверки пересечений в этом случае используем sentinel-дату в самом

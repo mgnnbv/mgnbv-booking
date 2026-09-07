@@ -19,15 +19,15 @@ class Property(Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
 
-    title: Mapped[str] = mapped_column(String(255), nullable=False)          # "Квартира на Ленина 5"
-    property_type: Mapped[PropertyType] = mapped_column(SAEnum(PropertyType), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    property_type: Mapped[PropertyType] = mapped_column(SAEnum(PropertyType, values_callable=lambda enum_cls: [e.value for e in enum_cls]), nullable=False)
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Дефолтная ставка — используется как подсказка при создании новой брони,
     # не является источником истины по факту оплаты (это в Payment).
     default_rate: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
-    default_rental_type: Mapped[RentalType | None] = mapped_column(SAEnum(RentalType), nullable=True)
+    default_rental_type: Mapped[RentalType | None] = mapped_column(SAEnum(RentalType, values_callable=lambda enum_cls: [e.value for e in enum_cls]), nullable=True)
 
     is_archived: Mapped[bool] = mapped_column(default=False)  # объект временно не сдаётся / скрыт
 
