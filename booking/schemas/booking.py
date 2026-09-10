@@ -4,13 +4,12 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from booking.models.enums import BookingStatus, RentalType
+from booking.models.enums import BookingStatus
 
 
 class BookingBase(BaseModel):
     property_id: uuid.UUID
     tenant_id: uuid.UUID
-    rental_type: RentalType
     start_date: date
     end_date: date | None = None
     rent_amount: Decimal
@@ -45,7 +44,6 @@ class BookingRead(BaseModel):
     id: uuid.UUID
     property_id: uuid.UUID
     tenant_id: uuid.UUID
-    rental_type: RentalType
     status: BookingStatus
     start_date: date
     end_date: date | None

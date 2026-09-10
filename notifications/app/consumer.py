@@ -10,6 +10,17 @@ from app.templates import render
 
 logger = logging.getLogger(__name__)
 
+_SENSITIVE_PAYLOAD_KEYS = {"code"}
+
+
+def _redact(fields: dict[str, str]) -> dict[str, str]:
+    try:
+        payload = json.loads(fields.get("payload", "{}"))
+    except json.JSONDecodeError:
+        return fields
+    redacted_payload = {k: ("***" if k in _SENSITIVE_PAYLOAD_KEYS else v) for k, v in payload.items()}
+    return {**fields, "payload": json.dumps(redacted_payload)}
+
 
 async def _ensure_group(client: redis.Redis) -> None:
     try:
@@ -43,9 +54,10 @@ async def _handle_message(fields: dict[str, str]) -> None:
 
 async def run_consumer(stop_event: asyncio.Event) -> None:
     client = redis.from_url(settings.redis_url, decode_responses=True)
-    await _ensure_group(client)
 
     try:
+        await _ensure_group(client)
+
         while not stop_event.is_set():
             try:
                 response = await client.xreadgroup(
@@ -65,7 +77,9 @@ async def run_consumer(stop_event: asyncio.Event) -> None:
                     try:
                         await _handle_message(message_fields)
                     except Exception:
-                        logger.exception("failed to process message id=%s fields=%s", message_id, message_fields)
+                        logger.exception(
+                            "failed to process message id=%s fields=%s", message_id, _redact(message_fields)
+                        )
                     finally:
                         await client.xack(settings.notifications_stream, settings.consumer_group, message_id)
     finally:

@@ -2,7 +2,6 @@ import { api } from "./api.js";
 import { openModal, closeModal, showToast, showError, withSubmitLock } from "./ui.js";
 import {
   PROPERTY_TYPE_LABELS,
-  RENTAL_TYPE_LABELS,
   BOOKING_STATUS_LABELS,
   BOOKING_STATUS_BADGE,
   PAYMENT_STATUS_LABELS,
@@ -15,7 +14,7 @@ import {
   optionsHtml,
   todayIso,
 } from "./utils.js";
-import { cacheProperties, cacheTenants, propertyTitle, tenantName, state } from "./state.js";
+import { cacheProperties, cacheTenants, propertyTitle, tenantName, state, loadTheme, setTheme } from "./state.js";
 
 function formData(form) {
   const fd = new FormData(form);
@@ -155,7 +154,7 @@ async function renderPropertiesList(root) {
               <div class="property-card ${p.is_archived ? "archived" : ""}" data-id="${p.id}">
                 <h4>${escapeHtml(p.title)}</h4>
                 <div class="property-meta">${PROPERTY_TYPE_LABELS[p.property_type] || p.property_type}${p.address ? " · " + escapeHtml(p.address) : ""}</div>
-                <div class="property-meta">${p.default_rate ? formatMoney(p.default_rate) : "ставка не указана"}${p.default_rental_type ? " · " + RENTAL_TYPE_LABELS[p.default_rental_type] : ""}</div>
+                <div class="property-meta">${p.default_rate ? formatMoney(p.default_rate) : "ставка не указана"}</div>
                 ${p.is_archived ? badge("Архив", "badge-gray") : ""}
               </div>`
               )
@@ -213,7 +212,7 @@ async function renderPropertyDetail(root, propertyId) {
       <h3 style="margin-top:0">${escapeHtml(property.title)} ${property.is_archived ? badge("Архив", "badge-gray") : ""}</h3>
       <p class="property-meta">${PROPERTY_TYPE_LABELS[property.property_type] || property.property_type}${property.address ? " · " + escapeHtml(property.address) : ""}</p>
       ${property.description ? `<p>${escapeHtml(property.description)}</p>` : ""}
-      <p class="property-meta">Ставка по умолчанию: ${property.default_rate ? formatMoney(property.default_rate) : "—"}${property.default_rental_type ? " (" + RENTAL_TYPE_LABELS[property.default_rental_type] + ")" : ""}</p>
+      <p class="property-meta">Ставка по умолчанию: ${property.default_rate ? formatMoney(property.default_rate) : "—"}</p>
     </div>
 
     <div class="card">
@@ -224,12 +223,11 @@ async function renderPropertyDetail(root, propertyId) {
       ${
         bookings.length === 0
           ? `<div class="empty-state">Броней пока нет</div>`
-          : `<table><thead><tr><th>Жилец</th><th>Тип</th><th>Период</th><th>Сумма</th><th>Статус</th><th></th></tr></thead><tbody>
+          : `<table><thead><tr><th>Жилец</th><th>Период</th><th>Сумма</th><th>Статус</th><th></th></tr></thead><tbody>
               ${bookings
                 .map(
                   (b) => `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer">
                     <td>${escapeHtml(tenantName(b.tenant_id))}</td>
-                    <td>${RENTAL_TYPE_LABELS[b.rental_type] || b.rental_type}</td>
                     <td>${formatDate(b.start_date)} — ${formatDate(b.end_date)}</td>
                     <td>${formatMoney(b.rent_amount)}</td>
                     <td>${badge(BOOKING_STATUS_LABELS[b.status] || b.status, BOOKING_STATUS_BADGE[b.status])}</td>
@@ -288,12 +286,6 @@ function openPropertyForm(existing, onSaved) {
       <label>Тип объекта *
         <select name="property_type">${optionsHtml(PROPERTY_TYPE_LABELS, existing?.property_type || "apartment")}</select>
       </label>
-      <label>Тип аренды по умолчанию
-        <select name="default_rental_type">
-          <option value="">—</option>
-          ${optionsHtml(RENTAL_TYPE_LABELS, existing?.default_rental_type || "")}
-        </select>
-      </label>
       <label>Адрес
         <input name="address" value="${escapeHtml(existing?.address || "")}" />
       </label>
@@ -315,7 +307,7 @@ function openPropertyForm(existing, onSaved) {
   form.addEventListener(
     "submit",
     withSubmitLock(form, async () => {
-      const data = emptyToNull(formData(form), ["address", "description", "default_rate", "default_rental_type"]);
+      const data = emptyToNull(formData(form), ["address", "description", "default_rate"]);
       try {
         if (existing) {
           await api.updateProperty(existing.id, data);
@@ -372,9 +364,6 @@ async function openBookingForm({ propertyId = null, onSaved }) {
             ? `<span class="form-error">Сначала добавьте жильца во вкладке «Жильцы»</span>`
             : `<select name="tenant_id" required>${tenants.map(([id, name]) => `<option value="${id}">${escapeHtml(name)}</option>`).join("")}</select>`
         }
-      </label>
-      <label>Тип аренды *
-        <select name="rental_type">${optionsHtml(RENTAL_TYPE_LABELS, "short_term")}</select>
       </label>
       <label>День платежа (1-31)
         <input name="monthly_payment_day" type="number" min="1" max="31" />
@@ -463,13 +452,12 @@ export async function renderBookings(root) {
       ${
         bookings.length === 0
           ? `<div class="empty-state">Броней пока нет</div>`
-          : `<table><thead><tr><th>Объект</th><th>Жилец</th><th>Тип</th><th>Период</th><th>Сумма</th><th>Статус</th><th></th></tr></thead><tbody>
+          : `<table><thead><tr><th>Объект</th><th>Жилец</th><th>Период</th><th>Сумма</th><th>Статус</th><th></th></tr></thead><tbody>
               ${bookings
                 .map(
                   (b) => `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer">
                     <td>${escapeHtml(propertyTitle(b.property_id))}</td>
                     <td>${escapeHtml(tenantName(b.tenant_id))}</td>
-                    <td>${RENTAL_TYPE_LABELS[b.rental_type] || b.rental_type}</td>
                     <td>${formatDate(b.start_date)} — ${formatDate(b.end_date)}</td>
                     <td>${formatMoney(b.rent_amount)}</td>
                     <td>${badge(BOOKING_STATUS_LABELS[b.status] || b.status, BOOKING_STATUS_BADGE[b.status])}</td>
@@ -878,6 +866,44 @@ export async function renderOverdue(root) {
       } catch (err) {
         showError(err);
       }
+    });
+  });
+}
+
+/* ============================== Настройки ============================== */
+
+const THEME_LABELS = {
+  system: "Как в системе",
+  light: "Светлая",
+  dark: "Тёмная",
+};
+
+export async function renderSettings(root) {
+  const currentTheme = loadTheme();
+
+  root.innerHTML = `
+    <div class="card">
+      <div class="section-head"><h3>Аккаунт</h3></div>
+      <p class="property-meta">Вы вошли как ${escapeHtml(state.userDisplayName || "—")}</p>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><h3>Оформление</h3></div>
+      <div class="toolbar" id="theme-toggle">
+        ${Object.entries(THEME_LABELS)
+          .map(
+            ([value, label]) =>
+              `<button type="button" class="btn ${value === currentTheme ? "btn-primary" : "btn-ghost"}" data-theme-value="${value}">${label}</button>`
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  root.querySelectorAll("[data-theme-value]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setTheme(btn.dataset.themeValue);
+      renderSettings(root);
     });
   });
 }

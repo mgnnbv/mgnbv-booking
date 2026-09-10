@@ -22,5 +22,6 @@ async def send_email(to: str, subject: str, body: str) -> None:
         username=settings.smtp_user or None,
         password=settings.smtp_password or None,
         start_tls=settings.smtp_use_tls,
+        timeout=10,
     )
     logger.info("email sent to=%s subject=%r", to, subject)

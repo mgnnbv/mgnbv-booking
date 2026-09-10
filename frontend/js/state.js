@@ -44,3 +44,23 @@ export function cacheTenants(tenants) {
 export function tenantName(id) {
   return state.tenantNameCache.get(id) || "Жилец";
 }
+
+const THEME_KEY = "mgnbv_theme";
+
+export function loadTheme() {
+  return localStorage.getItem(THEME_KEY) || "system";
+}
+
+export function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === "dark" || theme === "light") {
+    root.setAttribute("data-theme", theme);
+  } else {
+    root.removeAttribute("data-theme");
+  }
+}
+
+export function setTheme(theme) {
+  localStorage.setItem(THEME_KEY, theme);
+  applyTheme(theme);
+}

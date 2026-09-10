@@ -19,8 +19,8 @@
       </div>
 
       <form id="login-form" class="auth-form">
-        <label>Телефон
-          <input type="text" name="phone" required autocomplete="username" placeholder="+7 900 000-00-00" />
+        <label>Email
+          <input type="email" name="email" required autocomplete="username" placeholder="you@example.com" />
         </label>
         <label>Пароль
           <input type="password" name="password" required autocomplete="current-password" />
@@ -30,8 +30,8 @@
       </form>
 
       <form id="register-form" class="auth-form" hidden>
-        <label>Телефон *
-          <input type="text" name="phone" required minlength="5" maxlength="20" placeholder="+7 900 000-00-00" />
+        <label>Email *
+          <input type="email" name="email" required placeholder="you@example.com" />
         </label>
         <label>Пароль *
           <input type="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" />
@@ -39,11 +39,22 @@
         <label>Имя
           <input type="text" name="full_name" />
         </label>
-        <label>Email
-          <input type="email" name="email" />
+        <label>Телефон
+          <input type="text" name="phone" minlength="5" maxlength="20" placeholder="+7 900 000-00-00" />
         </label>
         <div class="form-error" id="register-error"></div>
         <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+      </form>
+
+      <form id="verify-form" class="auth-form" hidden>
+        <p class="brand-sub">Введите код из email</p>
+        <p class="property-meta" id="verify-hint"></p>
+        <label>Код из письма
+          <input type="text" name="code" required minlength="6" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" />
+        </label>
+        <div class="form-error" id="verify-error"></div>
+        <button type="submit" class="btn btn-primary">Подтвердить</button>
+        <button type="button" class="btn btn-ghost" id="verify-back-btn">Назад к входу</button>
       </form>
     </div>
   </div>
@@ -58,6 +69,7 @@
         <button class="nav-item" data-view="bookings">Брони</button>
         <button class="nav-item" data-view="tenants">Жильцы</button>
         <button class="nav-item" data-view="overdue">Просрочки</button>
+        <button class="nav-item" data-view="settings">Настройки</button>
       </nav>
       <div class="sidebar-footer">
         <div class="user-name" id="user-name"></div>

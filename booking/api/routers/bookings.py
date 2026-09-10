@@ -27,7 +27,6 @@ async def list_property_bookings(
 
 @router.post("/bookings", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
 async def create_booking(data: BookingCreate, current_user: CurrentUser, db: DbSession) -> BookingRead:
-    """Возвращает 409, если объект уже занят на выбранные даты (EXCLUDE CONSTRAINT в БД)."""
     booking = await booking_service.create_booking(db, current_user.id, data)
 
     property_ = await db.get(Property, data.property_id)
@@ -40,7 +39,6 @@ async def create_booking(data: BookingCreate, current_user: CurrentUser, db: DbS
             "owner_name": current_user.full_name,
             "property_title": property_.title if property_ else None,
             "tenant_name": tenant.full_name if tenant else None,
-            "rental_type": booking.rental_type.value,
             "start_date": booking.start_date.isoformat(),
             "end_date": booking.end_date.isoformat() if booking.end_date else None,
             "rent_amount": float(booking.rent_amount),
@@ -66,7 +64,6 @@ async def update_booking(
 
 @router.delete("/bookings/{booking_id}", response_model=BookingRead)
 async def cancel_booking(booking_id: uuid.UUID, current_user: CurrentUser, db: DbSession) -> BookingRead:
-    """Отменяет бронь (status=cancelled), не удаляет из БД — освобождает даты."""
     booking = await booking_service.get_owned_booking(db, current_user.id, booking_id)
     booking = await booking_service.cancel_booking(db, booking)
     return BookingRead.model_validate(booking)

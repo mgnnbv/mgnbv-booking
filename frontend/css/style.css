@@ -16,6 +16,42 @@
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171c;
+    --surface: #1c1f26;
+    --border: #2c3038;
+    --text: #e7e9ee;
+    --text-muted: #9aa1ac;
+    --primary: #5b7dfa;
+    --primary-hover: #7692fb;
+    --danger: #f27274;
+    --danger-bg: #3a2325;
+    --success: #34c281;
+    --success-bg: #17332a;
+    --warning: #e0a84f;
+    --warning-bg: #3a2f1a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #15171c;
+  --surface: #1c1f26;
+  --border: #2c3038;
+  --text: #e7e9ee;
+  --text-muted: #9aa1ac;
+  --primary: #5b7dfa;
+  --primary-hover: #7692fb;
+  --danger: #f27274;
+  --danger-bg: #3a2325;
+  --success: #34c281;
+  --success-bg: #17332a;
+  --warning: #e0a84f;
+  --warning-bg: #3a2f1a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
 * { box-sizing: border-box; }
 
 /* Классы вроде .auth-form/.modal-overlay задают display напрямую и иначе
@@ -113,7 +149,7 @@ input, select, textarea {
   padding: 9px 11px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   color: var(--text);
   width: 100%;
 }

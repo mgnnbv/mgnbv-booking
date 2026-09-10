@@ -16,13 +16,17 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 30
 
-    # Симметричный ключ для шифрования паспортных данных жильцов (Fernet,
-    # см. core/encryption.py). Генерируется через Fernet.generate_key().
+
     encryption_key: str
 
-    # Redis Streams — канал событий для notifications-микросервиса.
     redis_url: str = "redis://localhost:6379/0"
     notifications_stream: str = "notifications"
+
+    photos_storage_path: str = "/app/uploads/properties"
+    photos_public_base_url: str = "/uploads/properties"
+    max_photo_size_mb: int = 5
+
+    email_verification_code_ttl_minutes: int = 10
 
 
 @lru_cache

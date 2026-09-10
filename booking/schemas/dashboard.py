@@ -1,3 +1,4 @@
+from typing import Literal
 import uuid
 from datetime import date
 from decimal import Decimal
@@ -14,7 +15,7 @@ class UpcomingBookingEvent(BaseModel):
     property_title: str
     tenant_id: uuid.UUID
     tenant_full_name: str
-    event_type: str  # "check_in" | "check_out"
+    event_type: Literal["check_in", "check_out"]
     event_date: date
 
 
@@ -26,10 +27,6 @@ class MonthlyIncomeSummary(BaseModel):
 
 
 class DashboardResponse(BaseModel):
-    """Один агрегирующий ответ для главного экрана мобилки — см. правило
-    'меньше запросов': объекты, ближайшие заезды/выезды (7 дней), просрочки,
-    сводка дохода за месяц одним запросом."""
-
     properties: list[PropertyRead]
     upcoming_events: list[UpcomingBookingEvent]
     overdue_payments: list[OverduePaymentRead]

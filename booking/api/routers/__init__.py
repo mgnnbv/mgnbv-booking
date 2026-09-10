@@ -1,8 +1,9 @@
 ﻿from fastapi import APIRouter
 
+from booking.core.config import settings
 from booking.api.routers import auth, bookings, dashboard, payments, properties, tenants
 
-api_router = APIRouter(prefix="/api/v1")
+api_router = APIRouter(prefix=settings.api_v1_prefix)
 api_router.include_router(auth.router)
 api_router.include_router(properties.router)
 api_router.include_router(tenants.router)

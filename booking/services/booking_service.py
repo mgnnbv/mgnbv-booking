@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from booking.core.exceptions import ConflictError, NotFoundError
+from booking.core.exceptions import ConflictError, NotFoundError, ValidationError
 from booking.models.booking import Booking
 from booking.models.enums import BookingStatus
 from booking.models.property import Property
@@ -15,8 +15,6 @@ from booking.schemas.booking import BookingCreate, BookingUpdate
 
 
 def build_date_range(start_date: date, end_date: date | None) -> Range:
-    # end_date is None -> долгосрочная аренда "бессрочно": верхняя граница
-    # диапазона не задаётся (упорядочивается PostgreSQL как +infinity).
     return Range(lower=start_date, upper=end_date, bounds="[)")
 
 
@@ -71,7 +69,6 @@ async def create_booking(db: AsyncSession, owner_id: uuid.UUID, data: BookingCre
     booking = Booking(
         property_id=data.property_id,
         tenant_id=data.tenant_id,
-        rental_type=data.rental_type,
         status=data.status,
         start_date=data.start_date,
         end_date=data.end_date,
@@ -98,6 +95,9 @@ async def update_booking(db: AsyncSession, booking: Booking, data: BookingUpdate
 
     new_start = updates.get("start_date", booking.start_date)
     new_end = updates["end_date"] if "end_date" in updates else booking.end_date
+
+    if new_end is not None and new_end <= new_start:
+        raise ValidationError("end_date должна быть позже start_date")
 
     for field, value in updates.items():
         setattr(booking, field, value)

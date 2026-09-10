@@ -8,14 +8,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN pip install --no-cache-dir "poetry>=2.0.0, <3.0.0"
-# Слой зависимостей отдельно от кода — кеш переиспользуется, пока
-# pyproject.toml/poetry.lock не меняются.
 COPY pyproject.toml poetry.lock* ./
 RUN poetry install --no-interaction --no-ansi --no-root --only main
 
 COPY . .
 RUN poetry install --no-interaction --no-ansi --only main
 
+RUN useradd --create-home --shell /bin/bash appuser && chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 8001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=3)" || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

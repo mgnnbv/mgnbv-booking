@@ -34,6 +34,12 @@ async def list_overdue_payments(current_user: CurrentUser, db: DbSession) -> lis
     return [payment_service.to_overdue_read(p) for p in payments]
 
 
+@router.get("/payments/{payment_id}", response_model=PaymentRead)
+async def get_payment(payment_id: uuid.UUID, current_user: CurrentUser, db: DbSession) -> PaymentRead:
+    payment = await payment_service.get_owned_payment(db, current_user.id, payment_id)
+    return PaymentRead.model_validate(payment)
+
+
 @router.patch("/payments/{payment_id}", response_model=PaymentRead)
 async def update_payment(
     payment_id: uuid.UUID, data: PaymentUpdate, current_user: CurrentUser, db: DbSession
@@ -60,4 +66,11 @@ async def update_payment(
                 "paid_at": payment.paid_at.isoformat() if payment.paid_at else None,
             },
         )
+    return PaymentRead.model_validate(payment)
+
+
+@router.delete("/payments/{payment_id}", response_model=PaymentRead)
+async def cancel_payment(payment_id: uuid.UUID, current_user: CurrentUser, db: DbSession) -> PaymentRead:
+    payment = await payment_service.get_owned_payment(db, current_user.id, payment_id)
+    payment = await payment_service.cancel_payment(db, payment)
     return PaymentRead.model_validate(payment)

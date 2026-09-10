@@ -21,13 +21,18 @@ class Tenant(Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
 
-    # Паспортные данные — храним отдельно и шифруем на уровне приложения
-    # (application-level encryption), т.к. это ПДн по 152-ФЗ.
     passport_data_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    notes: Mapped[str | None] = mapped_column(Text, nullable=True)  # свободные заметки арендодателя
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     owner: Mapped["User"] = relationship(back_populates="tenants")
     bookings: Mapped[list["Booking"]] = relationship(back_populates="tenant")
+
+    @property
+    def has_passport_data(self) -> bool:
+        return self.passport_data_encrypted is not None

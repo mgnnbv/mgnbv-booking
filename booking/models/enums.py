@@ -2,33 +2,39 @@ import enum
 
 
 class PropertyType(str, enum.Enum):
-    APARTMENT = "apartment"     # квартира
-    ROOM = "room"                # комната
-    NUMBER = "number"            # номер (мини-отель/гостевой дом)
-    HOUSE = "house"               # дом
-
-
-class RentalType(str, enum.Enum):
-    SHORT_TERM = "short_term"     # посуточная
-    LONG_TERM = "long_term"       # долгосрочная
+    APARTMENT = "apartment"
+    ROOM = "room"
+    NUMBER = "number"
+    HOUSE = "house"
+    OTHER = "other"
 
 
 class BookingStatus(str, enum.Enum):
-    PENDING = "pending"           # забронировано, ещё не заехал
-    ACTIVE = "active"             # жилец уже проживает
-    COMPLETED = "completed"       # выехал, бронь закрыта
-    CANCELLED = "cancelled"       # отменена (не блокирует даты)
+    PENDING = "pending"           
+    ACTIVE = "active"             
+    COMPLETED = "completed"       
+    CANCELLED = "cancelled"       
 
 
 class PaymentStatus(str, enum.Enum):
-    PENDING = "pending"           # ожидается
-    PAID = "paid"                 # оплачено
-    OVERDUE = "overdue"           # просрочено
+    PENDING = "pending"           
+    PAID = "paid"                 
+    OVERDUE = "overdue"           
     CANCELLED = "cancelled"
 
 
 class PaymentType(str, enum.Enum):
-    RENT = "rent"                 # оплата аренды
-    DEPOSIT = "deposit"           # депозит/залог
-    UTILITY = "utility"           # коммунальные
+    RENT = "rent"                 
+    DEPOSIT = "deposit"           
+    UTILITY = "utility"           
     OTHER = "other"
+
+class PaymentMethod(str, enum.Enum):
+    CASH = "cash"                 
+    CARD = "card"                 
+    TRANSFER = "transfer"         
+    OTHER = "other"
+    
+    
+def enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [member.value for member in enum_cls]

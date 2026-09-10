@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from booking.models.enums import PropertyType, RentalType
+from booking.models.enums import PropertyType
 
 
 class PropertyPhotoRead(BaseModel):
@@ -21,7 +21,6 @@ class PropertyBase(BaseModel):
     address: str | None = None
     description: str | None = None
     default_rate: Decimal | None = None
-    default_rental_type: RentalType | None = None
 
 
 class PropertyCreate(PropertyBase):
@@ -34,7 +33,6 @@ class PropertyUpdate(BaseModel):
     address: str | None = None
     description: str | None = None
     default_rate: Decimal | None = None
-    default_rental_type: RentalType | None = None
     is_archived: bool | None = None
 
 

@@ -31,8 +31,8 @@ class TenantRead(TenantBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     created_at: datetime
-    # Паспортные данные никогда не отдаются в открытом виде — только признак,
-    # что они сохранены.
+    updated_at: datetime
+
     has_passport_data: bool = False
 
 

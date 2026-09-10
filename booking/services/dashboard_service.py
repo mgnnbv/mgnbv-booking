@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from booking.models.enums import BookingStatus, PaymentStatus
 from booking.models.booking import Booking
 from booking.models.enums import PaymentStatus
 from booking.models.payment import Payment
@@ -24,7 +25,7 @@ async def _upcoming_events(db: AsyncSession, owner_id: uuid.UUID, today: date, h
         .join(Tenant, Booking.tenant_id == Tenant.id)
         .where(
             Property.owner_id == owner_id,
-            Booking.status.in_(["pending", "active"]),
+            Booking.status.in_([BookingStatus.PENDING, BookingStatus.ACTIVE]),
             Booking.start_date >= today,
             Booking.start_date <= horizon,
         )
@@ -35,7 +36,7 @@ async def _upcoming_events(db: AsyncSession, owner_id: uuid.UUID, today: date, h
         .join(Tenant, Booking.tenant_id == Tenant.id)
         .where(
             Property.owner_id == owner_id,
-            Booking.status.in_(["pending", "active"]),
+            Booking.status.in_([BookingStatus.PENDING, BookingStatus.ACTIVE]),
             Booking.end_date.is_not(None),
             Booking.end_date >= today,
             Booking.end_date <= horizon,

@@ -121,6 +121,7 @@ function formatDetail(detail) {
 export const api = {
   register: (data) => apiFetch("/auth/register", { method: "POST", body: data, auth: false }),
   login: (data) => apiFetch("/auth/login", { method: "POST", body: data, auth: false }),
+  verifyEmail: (data) => apiFetch("/auth/verify-email", { method: "POST", body: data, auth: false }),
 
   dashboard: () => apiFetch("/dashboard"),
 

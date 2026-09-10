@@ -15,6 +15,12 @@ RUN poetry install --no-interaction --no-ansi --no-root --only main
 COPY . .
 RUN poetry install --no-interaction --no-ansi --only main
 
+RUN useradd --create-home --shell /bin/bash appuser && chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 8000
 
-CMD ["uvicorn", "booking.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)" || exit 1
+
+CMD ["uvicorn", "booking.main:app", "--host", "0.0.0.0", "--port", "8000"]

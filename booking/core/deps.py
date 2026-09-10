@@ -12,12 +12,16 @@ from booking.models.user import User
 
 oauth2_scheme = HTTPBearer(auto_error=False)
 
+
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
-    
+
     token = credentials.credentials if credentials else None
+    if token is None:
+        raise UnauthorizedError("Токен не предоставлен")
+
     try:
         payload = decode_token(token)
     except ValueError as exc:
@@ -30,7 +34,12 @@ async def get_current_user(
     if raw_user_id is None:
         raise UnauthorizedError("Некорректный токен")
 
-    user = await db.get(User, UUID(raw_user_id))
+    try:
+        user_id = UUID(raw_user_id)
+    except (ValueError, TypeError) as exc:
+        raise UnauthorizedError("Некорректный токен") from exc
+
+    user = await db.get(User, user_id)
     if user is None:
         raise UnauthorizedError("Пользователь не найден")
 

@@ -1,6 +1,12 @@
+import os
+import socket
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _default_consumer_name() -> str:
+    return os.getenv("HOSTNAME") or socket.gethostname()
 
 
 class Settings(BaseSettings):
@@ -9,7 +15,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     notifications_stream: str = "notifications"
     consumer_group: str = "notifications-workers"
-    consumer_name: str = "notifications-worker-1"
+    consumer_name: str = _default_consumer_name()
 
     smtp_host: str = "localhost"
     smtp_port: int = 587

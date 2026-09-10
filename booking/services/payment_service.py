@@ -25,6 +25,7 @@ def to_overdue_read(payment: Payment) -> OverduePaymentRead:
         payment_method=payment.payment_method,
         comment=payment.comment,
         created_at=payment.created_at,
+        updated_at=payment.updated_at,
         property_title=payment.booking.property.title,
         tenant_full_name=payment.booking.tenant.full_name,
     )
@@ -56,7 +57,7 @@ async def create_payment(
     payment = Payment(booking_id=booking_id, **data.model_dump())
     db.add(payment)
     await db.commit()
-    await db.refresh(payment, attribute_names=["created_at"])
+    await db.refresh(payment, attribute_names=["created_at", "updated_at"])
     return payment
 
 
@@ -76,7 +77,6 @@ async def get_owned_payment(db: AsyncSession, owner_id: uuid.UUID, payment_id: u
 async def update_payment(db: AsyncSession, payment: Payment, data: PaymentUpdate) -> Payment:
     updates = data.model_dump(exclude_unset=True)
 
-    # Переход в PAID без явно указанной даты оплаты — фиксируем момент сейчас.
     if updates.get("status") == PaymentStatus.PAID and payment.paid_at is None and "paid_at" not in updates:
         updates["paid_at"] = datetime.now(timezone.utc)
 
@@ -84,6 +84,14 @@ async def update_payment(db: AsyncSession, payment: Payment, data: PaymentUpdate
         setattr(payment, field, value)
 
     await db.commit()
+    await db.refresh(payment, attribute_names=["updated_at"])
+    return payment
+
+
+async def cancel_payment(db: AsyncSession, payment: Payment) -> Payment:
+    payment.status = PaymentStatus.CANCELLED
+    await db.commit()
+    await db.refresh(payment, attribute_names=["updated_at"])
     return payment
 
 

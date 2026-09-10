@@ -6,7 +6,6 @@ _TEMPLATES = {
         "Создана новая бронь.\n\n"
         "Объект: {property_title}\n"
         "Жилец: {tenant_name}\n"
-        "Тип аренды: {rental_type}\n"
         "Заезд: {start_date}\n"
         "Выезд: {end_date}\n"
         "Сумма: {rent_amount}\n",
@@ -19,6 +18,12 @@ _TEMPLATES = {
         "Сумма: {amount}\n"
         "Тип платежа: {payment_type}\n"
         "Дата оплаты: {paid_at}\n",
+    ),
+    "auth.email_verification": (
+        "Код подтверждения email",
+        "Ваш код подтверждения: {code}\n\n"
+        "Код действителен {ttl_minutes} минут. Если вы не запрашивали регистрацию — "
+        "просто проигнорируйте это письмо.\n",
     ),
 }
 

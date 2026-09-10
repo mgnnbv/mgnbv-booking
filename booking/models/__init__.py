@@ -2,10 +2,10 @@
 from booking.models.booking import Booking
 from booking.models.enums import (
     BookingStatus,
+    PaymentMethod,
     PaymentStatus,
     PaymentType,
     PropertyType,
-    RentalType,
 )
 from booking.models.payment import Payment
 from booking.models.property import Property, PropertyPhoto
@@ -17,12 +17,12 @@ __all__ = [
     "Booking",
     "BookingStatus",
     "Payment",
+    "PaymentMethod",
     "PaymentStatus",
     "PaymentType",
     "Property",
     "PropertyPhoto",
     "PropertyType",
-    "RentalType",
     "Tenant",
     "User",
 ]

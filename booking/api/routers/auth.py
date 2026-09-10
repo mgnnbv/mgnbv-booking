@@ -1,12 +1,15 @@
 ﻿from fastapi import APIRouter, status
 
+from booking.core.config import settings
 from booking.core.deps import DbSession
+from booking.core.events import publish_event
 from booking.schemas.auth import (
     AccessTokenResponse,
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
     TokenPair,
+    VerifyEmailRequest,
 )
 from booking.schemas.user import UserRead
 from booking.services import auth_service
@@ -17,6 +20,20 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(data: RegisterRequest, db: DbSession) -> UserRead:
     user = await auth_service.register_user(db, data)
+    await publish_event(
+        "auth.email_verification",
+        {
+            "owner_email": user.email,
+            "code": user.email_verification_code,
+            "ttl_minutes": settings.email_verification_code_ttl_minutes,
+        },
+    )
+    return UserRead.model_validate(user)
+
+
+@router.post("/verify-email", response_model=UserRead)
+async def verify_email(data: VerifyEmailRequest, db: DbSession) -> UserRead:
+    user = await auth_service.verify_email(db, data.email, data.code)
     return UserRead.model_validate(user)
 
 

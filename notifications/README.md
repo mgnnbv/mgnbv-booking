@@ -10,7 +10,7 @@ email-уведомления владельцам объектов: новая �
 ## Локальный запуск
 
 ```bash
-cp .env.example .env  # укажите REDIS_URL и SMTP_*
+cp .env.example .env
 poetry install
 poetry run uvicorn app.main:app --reload --port 8001
 ```

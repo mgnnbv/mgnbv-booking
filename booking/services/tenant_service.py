@@ -7,19 +7,7 @@ from sqlalchemy.orm import selectinload
 from booking.core.encryption import encrypt_text
 from booking.core.exceptions import NotFoundError
 from booking.models.tenant import Tenant
-from booking.schemas.tenant import TenantCreate, TenantRead, TenantUpdate
-
-
-def to_tenant_read(tenant: Tenant) -> TenantRead:
-    return TenantRead(
-        id=tenant.id,
-        owner_id=tenant.owner_id,
-        full_name=tenant.full_name,
-        phone=tenant.phone,
-        notes=tenant.notes,
-        created_at=tenant.created_at,
-        has_passport_data=tenant.passport_data_encrypted is not None,
-    )
+from booking.schemas.tenant import TenantCreate, TenantUpdate
 
 
 async def list_tenants(db: AsyncSession, owner_id: uuid.UUID, search: str | None = None) -> list[Tenant]:
@@ -56,7 +44,7 @@ async def create_tenant(db: AsyncSession, owner_id: uuid.UUID, data: TenantCreat
     )
     db.add(tenant)
     await db.commit()
-    await db.refresh(tenant, attribute_names=["created_at"])
+    await db.refresh(tenant, attribute_names=["created_at", "updated_at"])
     return tenant
 
 
@@ -69,4 +57,5 @@ async def update_tenant(db: AsyncSession, tenant: Tenant, data: TenantUpdate) ->
         tenant.passport_data_encrypted = encrypt_text(data.passport_data) if data.passport_data else None
 
     await db.commit()
+    await db.refresh(tenant, attribute_names=["updated_at"])
     return tenant

@@ -19,13 +19,15 @@ def _get_client() -> redis.Redis:
 
 
 async def publish_event(event_type: str, payload: dict[str, Any]) -> None:
-    """Кладёт событие в Redis Stream для notifications-микросервиса.
 
-    Не должно ронять основной запрос, если Redis недоступен — уведомления
-    вторичны по отношению к самой брони/оплате.
-    """
     try:
         client = _get_client()
         await client.xadd(settings.notifications_stream, {"type": event_type, "payload": json.dumps(payload)})
     except redis.RedisError:
         logger.exception("failed to publish event type=%s", event_type)
+
+async def close_event_client() -> None:
+    global _client
+    if _client is not None:
+        await _client.aclose()
+        _client = None

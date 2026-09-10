@@ -3,11 +3,7 @@ export const PROPERTY_TYPE_LABELS = {
   room: "Комната",
   number: "Номер",
   house: "Дом",
-};
-
-export const RENTAL_TYPE_LABELS = {
-  short_term: "Посуточно",
-  long_term: "Долгосрочно",
+  other: "Другое",
 };
 
 export const BOOKING_STATUS_LABELS = {

@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from booking.models.base import Base, uuid_pk
-from booking.models.enums import PropertyType, RentalType
+from booking.models.enums import PropertyType, enum_values
 
 if TYPE_CHECKING:
     from booking.models.booking import Booking
@@ -20,14 +21,14 @@ class Property(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    property_type: Mapped[PropertyType] = mapped_column(SAEnum(PropertyType, values_callable=lambda enum_cls: [e.value for e in enum_cls]), nullable=False)
+    property_type: Mapped[PropertyType] = mapped_column(
+        SAEnum(PropertyType, values_callable=enum_values), nullable=False
+    )
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Дефолтная ставка — используется как подсказка при создании новой брони,
-    # не является источником истины по факту оплаты (это в Payment).
-    default_rate: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
-    default_rental_type: Mapped[RentalType | None] = mapped_column(SAEnum(RentalType, values_callable=lambda enum_cls: [e.value for e in enum_cls]), nullable=True)
+
+    default_rate: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
 
     is_archived: Mapped[bool] = mapped_column(default=False)  # объект временно не сдаётся / скрыт
 
@@ -38,7 +39,9 @@ class Property(Base):
 
     owner: Mapped["User"] = relationship(back_populates="properties")
     bookings: Mapped[list["Booking"]] = relationship(back_populates="property", cascade="all, delete-orphan")
-    photos: Mapped[list["PropertyPhoto"]] = relationship(back_populates="property", cascade="all, delete-orphan")
+    photos: Mapped[list["PropertyPhoto"]] = relationship(
+        back_populates="property", cascade="all, delete-orphan", order_by="PropertyPhoto.sort_order"
+    )
 
 
 class PropertyPhoto(Base):
