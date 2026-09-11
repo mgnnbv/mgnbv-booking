@@ -11,7 +11,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
 revision: str = "0001"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
@@ -26,7 +25,6 @@ payment_type_enum = postgresql.ENUM("rent", "deposit", "utility", "other", name=
 
 
 def upgrade() -> None:
-    # Нужно для EXCLUDE CONSTRAINT по (uuid =, daterange &&) на bookings.
     op.execute("CREATE EXTENSION IF NOT EXISTS btree_gist;")
 
     bind = op.get_bind()
@@ -134,7 +132,6 @@ def upgrade() -> None:
     op.create_index("ix_bookings_tenant_id", "bookings", ["tenant_id"])
     op.create_index("ix_bookings_property_dates", "bookings", ["property_id", "start_date", "end_date"])
 
-    # SQLAlchemy ExcludeConstraint не имеет прямого Alembic op-хелпера — добавляем raw SQL.
     op.execute(
         """
         ALTER TABLE bookings

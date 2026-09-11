@@ -25,6 +25,11 @@ class VerifyEmailRequest(BaseModel):
     code: str = Field(min_length=6, max_length=6)
 
 
+class RegisterResponse(BaseModel):
+    email: str
+    detail: str = "Код подтверждения отправлен на email"
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 

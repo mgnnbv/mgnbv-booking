@@ -8,6 +8,7 @@ from booking.schemas.auth import (
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
+    RegisterResponse,
     TokenPair,
     VerifyEmailRequest,
 )
@@ -17,18 +18,18 @@ from booking.services import auth_service
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register(data: RegisterRequest, db: DbSession) -> UserRead:
-    user = await auth_service.register_user(db, data)
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+async def register(data: RegisterRequest, db: DbSession) -> RegisterResponse:
+    pending = await auth_service.register_user(db, data)
     await publish_event(
         "auth.email_verification",
         {
-            "owner_email": user.email,
-            "code": user.email_verification_code,
+            "owner_email": pending.email,
+            "code": pending.verification_code,
             "ttl_minutes": settings.email_verification_code_ttl_minutes,
         },
     )
-    return UserRead.model_validate(user)
+    return RegisterResponse(email=pending.email)
 
 
 @router.post("/verify-email", response_model=UserRead)

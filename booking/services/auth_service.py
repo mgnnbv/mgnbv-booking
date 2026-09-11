@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking.core.config import settings
@@ -14,6 +15,7 @@ from booking.core.security import (
     hash_password,
     verify_password,
 )
+from booking.models.pending_registration import PendingRegistration
 from booking.models.user import User
 from booking.schemas.auth import LoginRequest, RegisterRequest, TokenPair
 
@@ -22,7 +24,8 @@ def _generate_verification_code() -> str:
     return f"{secrets.randbelow(1_000_000):06d}"
 
 
-async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
+async def register_user(db: AsyncSession, data: RegisterRequest) -> PendingRegistration:
+
     existing_email = await db.scalar(select(User).where(User.email == data.email))
     if existing_email is not None:
         raise ConflictError("Пользователь с таким email уже зарегистрирован")
@@ -32,54 +35,63 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
         if existing_phone is not None:
             raise ConflictError("Пользователь с таким телефоном уже зарегистрирован")
 
-    user = User(
-        email=data.email,
-        phone=data.phone,
-        full_name=data.full_name,
-        password_hash=hash_password(data.password),
-        email_verification_code=_generate_verification_code(),
-        email_verification_code_expires_at=datetime.now(timezone.utc)
-        + timedelta(minutes=settings.email_verification_code_ttl_minutes),
+    pending = await db.scalar(select(PendingRegistration).where(PendingRegistration.email == data.email))
+    if pending is None:
+        pending = PendingRegistration(email=data.email)
+        db.add(pending)
+
+    pending.phone = data.phone
+    pending.full_name = data.full_name
+    pending.password_hash = hash_password(data.password)
+    pending.verification_code = _generate_verification_code()
+    pending.verification_code_expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.email_verification_code_ttl_minutes
     )
-    db.add(user)
+
     await db.commit()
-    await db.refresh(user, attribute_names=["created_at", "updated_at"])
-    return user
+    return pending
 
 
 async def verify_email(db: AsyncSession, email: str, code: str) -> User:
-    user = await db.scalar(select(User).where(User.email == email))
-    if user is None:
-        raise NotFoundError("Пользователь не найден")
+    pending = await db.scalar(select(PendingRegistration).where(PendingRegistration.email == email))
+    if pending is None:
+        raise NotFoundError("Регистрация не найдена — зарегистрируйтесь заново")
 
-    if user.email_verified:
-        return user
+    if pending.verification_code_expires_at < datetime.now(timezone.utc):
+        raise ValidationError("Код истёк — зарегистрируйтесь заново, чтобы получить новый")
 
-    if (
-        user.email_verification_code is None
-        or user.email_verification_code_expires_at is None
-        or user.email_verification_code_expires_at < datetime.now(timezone.utc)
-    ):
-        raise ValidationError("Код истёк или не запрашивался — запросите новый")
-
-    if not secrets.compare_digest(user.email_verification_code, code):
+    if not secrets.compare_digest(pending.verification_code, code):
         raise ValidationError("Неверный код")
 
-    user.email_verified = True
-    user.email_verification_code = None
-    user.email_verification_code_expires_at = None
-    await db.commit()
-    await db.refresh(user, attribute_names=["updated_at"])
+    user = User(
+        email=pending.email,
+        phone=pending.phone,
+        password_hash=pending.password_hash,
+        full_name=pending.full_name,
+    )
+    db.add(user)
+    await db.delete(pending)
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise ConflictError("Пользователь с таким email или телефоном уже зарегистрирован") from exc
+
+    await db.refresh(user, attribute_names=["created_at", "updated_at"])
     return user
 
 
 async def authenticate_user(db: AsyncSession, data: LoginRequest) -> User:
     user = await db.scalar(select(User).where(User.email == data.email))
-    if user is None or not verify_password(data.password, user.password_hash):
-        raise UnauthorizedError("Неверные учётные данные")
-    if not user.email_verified:
-        raise ForbiddenError("Email не подтверждён. Введите код из письма.")
-    return user
+    if user is not None and verify_password(data.password, user.password_hash):
+        return user
+
+    if user is None:
+        pending = await db.scalar(select(PendingRegistration).where(PendingRegistration.email == data.email))
+        if pending is not None:
+            raise ForbiddenError("Email не подтверждён. Введите код из письма.")
+
+    raise UnauthorizedError("Неверные учётные данные")
 
 
 def issue_token_pair(user: User) -> TokenPair:
