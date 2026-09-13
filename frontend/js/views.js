@@ -14,7 +14,7 @@ import {
   optionsHtml,
   todayIso,
 } from "./utils.js";
-import { cacheProperties, cacheTenants, propertyTitle, tenantName, state, loadTheme, setTheme } from "./state.js";
+import { cacheProperties, cacheTenants, propertyTitle, tenantName, state, loadTheme, setTheme, isAdmin } from "./state.js";
 
 function formData(form) {
   const fd = new FormData(form);
@@ -880,6 +880,7 @@ const THEME_LABELS = {
 
 export async function renderSettings(root) {
   const currentTheme = loadTheme();
+  const showMetrics = isAdmin();
 
   root.innerHTML = `
     <div class="card">
@@ -900,12 +901,16 @@ export async function renderSettings(root) {
       </div>
     </div>
 
-    <div class="card">
-      <div class="section-head"><h3>Метрики API</h3></div>
-      <div id="metrics-grid" class="stat-grid">
-        <div class="empty-state">Загрузка...</div>
-      </div>
-    </div>
+    ${
+      showMetrics
+        ? `<div class="card">
+            <div class="section-head"><h3>Метрики (админ)</h3></div>
+            <div id="metrics-grid" class="stat-grid">
+              <div class="empty-state">Загрузка...</div>
+            </div>
+          </div>`
+        : ""
+    }
   `;
 
   root.querySelectorAll("[data-theme-value]").forEach((btn) => {
@@ -919,7 +924,9 @@ export async function renderSettings(root) {
     window.dispatchEvent(new CustomEvent("auth:logout"));
   });
 
-  loadMetrics(root);
+  if (showMetrics) {
+    loadMetrics(root);
+  }
 }
 
 function metricStat(value, label, formatter) {

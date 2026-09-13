@@ -1,5 +1,6 @@
 export const state = {
   userDisplayName: "",
+  userRole: "user",
   // Кэш id объекта/жильца -> название, чтобы не гонять лишние запросы там, где
   // бэкенд не денормализует title (например, брони жильца или объекта).
   propertyTitleCache: new Map(),
@@ -8,19 +9,28 @@ export const state = {
   tenantsLoaded: false,
 };
 
-export function setUser(displayName) {
+export function setUser(displayName, role = "user") {
   state.userDisplayName = displayName;
+  state.userRole = role;
   localStorage.setItem("mgnbv_user_display", displayName);
+  localStorage.setItem("mgnbv_user_role", role);
 }
 
 export function loadUser() {
   state.userDisplayName = localStorage.getItem("mgnbv_user_display") || "";
+  state.userRole = localStorage.getItem("mgnbv_user_role") || "user";
   return state.userDisplayName;
 }
 
 export function clearUser() {
   state.userDisplayName = "";
+  state.userRole = "user";
   localStorage.removeItem("mgnbv_user_display");
+  localStorage.removeItem("mgnbv_user_role");
+}
+
+export function isAdmin() {
+  return state.userRole === "admin";
 }
 
 export function cacheProperties(properties) {

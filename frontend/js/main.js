@@ -47,6 +47,17 @@ function showVerifyScreen(email, password) {
   verifyForm.reset();
 }
 
+async function completeLogin(email) {
+  setUser(email);
+  try {
+    const me = await api.me();
+    setUser(me.email || email, me.role);
+  } catch {
+    // Роль останется дефолтной ("user") — не блокируем вход из-за этого.
+  }
+  enterApp();
+}
+
 function backToLogin() {
   pendingAuth = null;
   tabsEl.hidden = false;
@@ -67,8 +78,7 @@ loginForm.addEventListener("submit", async (e) => {
   try {
     const tokens = await api.login({ email, password });
     setTokens(tokens);
-    setUser(email);
-    enterApp();
+    await completeLogin(email);
   } catch (err) {
     if (err instanceof ApiError && err.status === 403) {
       showVerifyScreen(email, password);
@@ -113,10 +123,10 @@ verifyForm.addEventListener("submit", async (e) => {
     await api.verifyEmail({ email: pendingAuth.email, code });
     const tokens = await api.login({ email: pendingAuth.email, password: pendingAuth.password });
     setTokens(tokens);
-    setUser(pendingAuth.email);
+    const email = pendingAuth.email;
     pendingAuth = null;
     tabsEl.hidden = false;
-    enterApp();
+    await completeLogin(email);
   } catch (err) {
     verifyError.textContent = err instanceof ApiError ? err.message : "Не удалось подтвердить код";
   } finally {

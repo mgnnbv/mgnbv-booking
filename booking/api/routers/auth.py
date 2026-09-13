@@ -1,7 +1,7 @@
 ﻿from fastapi import APIRouter, status
 
 from booking.core.config import settings
-from booking.core.deps import DbSession
+from booking.core.deps import CurrentUser, DbSession
 from booking.core.events import publish_event
 from booking.schemas.auth import (
     AccessTokenResponse,
@@ -48,3 +48,8 @@ async def login(data: LoginRequest, db: DbSession) -> TokenPair:
 async def refresh(data: RefreshRequest, db: DbSession) -> AccessTokenResponse:
     access_token = await auth_service.refresh_access_token(db, data.refresh_token)
     return AccessTokenResponse(access_token=access_token)
+
+
+@router.get("/me", response_model=UserRead)
+async def get_me(current_user: CurrentUser) -> UserRead:
+    return UserRead.model_validate(current_user)
