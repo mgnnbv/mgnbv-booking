@@ -6,8 +6,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking.core.database import get_db
-from booking.core.exceptions import UnauthorizedError
+from booking.core.exceptions import ForbiddenError, UnauthorizedError
 from booking.core.security import decode_token
+from booking.models.enums import UserRole
 from booking.models.user import User
 
 oauth2_scheme = HTTPBearer(auto_error=False)
@@ -48,3 +49,17 @@ async def get_current_user(
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db)]
+
+
+def require_role(*allowed_roles: UserRole):
+    """Return a dependency that allows only users with one of the given roles."""
+
+    async def check_role(current_user: CurrentUser) -> User:
+        if current_user.role not in allowed_roles:
+            raise ForbiddenError("Недостаточно прав для выполнения этого действия")
+        return current_user
+
+    return check_role
+
+
+AdminUser = Annotated[User, Depends(require_role(UserRole.ADMIN))]

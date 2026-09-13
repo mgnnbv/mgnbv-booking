@@ -6,6 +6,7 @@ from booking.models.enums import (
     PaymentStatus,
     PaymentType,
     PropertyType,
+    UserRole,
 )
 from booking.models.payment import Payment
 from booking.models.pending_registration import PendingRegistration
@@ -27,4 +28,5 @@ __all__ = [
     "PropertyType",
     "Tenant",
     "User",
+    "UserRole",
 ]

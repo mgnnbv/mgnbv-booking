@@ -16,6 +16,7 @@ from booking.core.security import (
     verify_password,
 )
 from booking.models.pending_registration import PendingRegistration
+from booking.models.enums import UserRole
 from booking.models.user import User
 from booking.schemas.auth import LoginRequest, RegisterRequest, TokenPair
 
@@ -68,6 +69,7 @@ async def verify_email(db: AsyncSession, email: str, code: str) -> User:
         phone=pending.phone,
         password_hash=pending.password_hash,
         full_name=pending.full_name,
+        role=UserRole.ADMIN if settings.is_admin_email(pending.email) else UserRole.USER,
     )
     db.add(user)
     await db.delete(pending)

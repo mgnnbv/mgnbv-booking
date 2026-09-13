@@ -1,6 +1,11 @@
 import enum
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
+
+
 class PropertyType(str, enum.Enum):
     APARTMENT = "apartment"
     ROOM = "room"
