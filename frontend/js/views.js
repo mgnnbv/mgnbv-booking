@@ -950,15 +950,26 @@ async function loadMetrics(root) {
     return;
   }
 
-  if (!metrics.available) {
-    grid.innerHTML = `<div class="empty-state">Prometheus недоступен</div>`;
-    return;
+  // Бизнес-метрики считаются из БД и не зависят от Prometheus — показываем
+  // их всегда, а инфраструктурные (RPS/latency) только если available.
+  const cards = [
+    metricStat(metrics.total_users, "Всего пользователей", (v) => v),
+    metricStat(metrics.new_users_last_7_days, "Новых за 7 дней", (v) => v),
+    metricStat(metrics.pending_registrations_count, "Незавершённых регистраций", (v) => v),
+    metricStat(metrics.total_properties_active, "Активных объектов", (v) => v),
+    metricStat(metrics.total_bookings_active, "Активных броней", (v) => v),
+    metricStat(metrics.overdue_payments_count, "Просрочек по системе", (v) => v),
+    metricStat(metrics.total_revenue_this_month, "Доход за этот месяц", (v) => formatMoney(v)),
+  ];
+
+  if (metrics.available) {
+    cards.push(
+      metricStat(metrics.requests_per_second, "Запросов в секунду", (v) => v.toFixed(2)),
+      metricStat(metrics.error_rate_percent, "Ошибок 4xx/5xx", (v) => `${v.toFixed(1)}%`),
+      metricStat(metrics.avg_latency_ms, "Среднее время отклика", (v) => `${v.toFixed(0)} мс`),
+      metricStat(metrics.p95_latency_ms, "p95 время отклика", (v) => `${v.toFixed(0)} мс`)
+    );
   }
 
-  grid.innerHTML = [
-    metricStat(metrics.requests_per_second, "Запросов в секунду", (v) => v.toFixed(2)),
-    metricStat(metrics.error_rate_percent, "Ошибок 4xx/5xx", (v) => `${v.toFixed(1)}%`),
-    metricStat(metrics.avg_latency_ms, "Среднее время отклика", (v) => `${v.toFixed(0)} мс`),
-    metricStat(metrics.p95_latency_ms, "p95 время отклика", (v) => `${v.toFixed(0)} мс`),
-  ].join("");
+  grid.innerHTML = cards.join("") + (metrics.available ? "" : `<div class="empty-state">Метрики Prometheus (RPS/латентность) недоступны</div>`);
 }

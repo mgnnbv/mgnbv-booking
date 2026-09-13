@@ -72,6 +72,14 @@ def event_loop():
     держим один loop на всю сессию, как в реальном работающем сервере."""
     loop = asyncio.new_event_loop()
     yield loop
+
+    # publish_event() лениво открывает robust-соединение с RabbitMQ и держит
+    # его в module-level синглтоне — закрываем тем же loop'ом, пока он ещё
+    # жив (через отдельную async-фикстуру порядок teardown'ов не гарантирован
+    # и close() уже пытался достучаться до закрытого loop'а).
+    from booking.core.events import close_event_client
+
+    loop.run_until_complete(close_event_client())
     loop.close()
 
 
