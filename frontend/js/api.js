@@ -154,4 +154,6 @@ export const api = {
     apiFetch(`/bookings/${bookingId}/payments`, { method: "POST", body: data }),
   listOverduePayments: () => apiFetch("/payments/overdue"),
   updatePayment: (id, data) => apiFetch(`/payments/${id}`, { method: "PATCH", body: data }),
+
+  metricsSummary: () => apiFetch("/metrics/summary"),
 };

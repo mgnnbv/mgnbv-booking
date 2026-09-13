@@ -72,7 +72,7 @@ export async function renderDashboard(root) {
       ${
         data.upcoming_events.length === 0
           ? `<div class="empty-state">Нет событий на ближайшую неделю</div>`
-          : `<table><thead><tr><th>Дата</th><th>Событие</th><th>Объект</th><th>Жилец</th></tr></thead><tbody>
+          : `<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Событие</th><th>Объект</th><th>Жилец</th></tr></thead><tbody>
               ${data.upcoming_events
                 .map(
                   (e) => `<tr>
@@ -83,7 +83,7 @@ export async function renderDashboard(root) {
                   </tr>`
                 )
                 .join("")}
-            </tbody></table>`
+            </tbody></table></div>`
       }
     </div>
 
@@ -92,7 +92,7 @@ export async function renderDashboard(root) {
       ${
         data.overdue_payments.length === 0
           ? `<div class="empty-state">Просрочек нет</div>`
-          : `<table><thead><tr><th>Объект</th><th>Жилец</th><th>Сумма</th><th>Срок</th></tr></thead><tbody>
+          : `<div class="table-wrap"><table><thead><tr><th>Объект</th><th>Жилец</th><th>Сумма</th><th>Срок</th></tr></thead><tbody>
               ${data.overdue_payments
                 .map(
                   (p) => `<tr>
@@ -103,7 +103,7 @@ export async function renderDashboard(root) {
                   </tr>`
                 )
                 .join("")}
-            </tbody></table>`
+            </tbody></table></div>`
       }
     </div>
   `;
@@ -223,7 +223,7 @@ async function renderPropertyDetail(root, propertyId) {
       ${
         bookings.length === 0
           ? `<div class="empty-state">Броней пока нет</div>`
-          : `<table><thead><tr><th>Жилец</th><th>Период</th><th>Сумма</th><th>Статус</th><th></th></tr></thead><tbody>
+          : `<div class="table-wrap"><table><thead><tr><th>Жилец</th><th>Период</th><th>Сумма</th><th>Статус</th><th></th></tr></thead><tbody>
               ${bookings
                 .map(
                   (b) => `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer">
@@ -235,7 +235,7 @@ async function renderPropertyDetail(root, propertyId) {
                   </tr>`
                 )
                 .join("")}
-            </tbody></table>`
+            </tbody></table></div>`
       }
     </div>
   `;
@@ -885,6 +885,7 @@ export async function renderSettings(root) {
     <div class="card">
       <div class="section-head"><h3>Аккаунт</h3></div>
       <p class="property-meta">Вы вошли как ${escapeHtml(state.userDisplayName || "—")}</p>
+      <button type="button" class="btn btn-ghost" id="settings-logout-btn">Выйти</button>
     </div>
 
     <div class="card">
@@ -898,6 +899,13 @@ export async function renderSettings(root) {
           .join("")}
       </div>
     </div>
+
+    <div class="card">
+      <div class="section-head"><h3>Метрики API</h3></div>
+      <div id="metrics-grid" class="stat-grid">
+        <div class="empty-state">Загрузка...</div>
+      </div>
+    </div>
   `;
 
   root.querySelectorAll("[data-theme-value]").forEach((btn) => {
@@ -906,4 +914,44 @@ export async function renderSettings(root) {
       renderSettings(root);
     });
   });
+
+  root.querySelector("#settings-logout-btn").addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("auth:logout"));
+  });
+
+  loadMetrics(root);
+}
+
+function metricStat(value, label, formatter) {
+  return `
+    <div class="stat-card">
+      <div class="stat-value">${value === null || value === undefined ? "—" : formatter(value)}</div>
+      <div class="stat-label">${label}</div>
+    </div>
+  `;
+}
+
+async function loadMetrics(root) {
+  const grid = root.querySelector("#metrics-grid");
+  if (!grid) return;
+
+  let metrics;
+  try {
+    metrics = await api.metricsSummary();
+  } catch {
+    grid.innerHTML = `<div class="empty-state">Не удалось получить метрики</div>`;
+    return;
+  }
+
+  if (!metrics.available) {
+    grid.innerHTML = `<div class="empty-state">Prometheus недоступен</div>`;
+    return;
+  }
+
+  grid.innerHTML = [
+    metricStat(metrics.requests_per_second, "Запросов в секунду", (v) => v.toFixed(2)),
+    metricStat(metrics.error_rate_percent, "Ошибок 4xx/5xx", (v) => `${v.toFixed(1)}%`),
+    metricStat(metrics.avg_latency_ms, "Среднее время отклика", (v) => `${v.toFixed(0)} мс`),
+    metricStat(metrics.p95_latency_ms, "p95 время отклика", (v) => `${v.toFixed(0)} мс`),
+  ].join("");
 }

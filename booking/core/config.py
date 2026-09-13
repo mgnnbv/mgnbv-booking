@@ -28,6 +28,8 @@ class Settings(BaseSettings):
 
     email_verification_code_ttl_minutes: int = 10
 
+    prometheus_url: str = "http://prometheus:9090"
+
 
 @lru_cache
 def get_settings() -> Settings:

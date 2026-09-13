@@ -164,11 +164,14 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
   btn.addEventListener("click", () => navigate(btn.dataset.view));
 });
 
-document.getElementById("logout-btn").addEventListener("click", () => {
+function logout() {
   setTokens(null);
   clearUser();
   enterAuth();
-});
+}
+
+document.getElementById("logout-btn").addEventListener("click", logout);
+window.addEventListener("auth:logout", logout);
 
 function enterApp() {
   authScreen.hidden = true;
