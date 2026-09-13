@@ -2,10 +2,12 @@
 
 Notifications-микросервис mgnbvbooking.
 
-Слушает поток событий `notifications` в Redis Streams (публикует их основной
-сервис `mgnbvbooking` через `app.core.events.publish_event`) и рассылает
-email-уведомления владельцам объектов: новая бронь (`booking.created`),
-поступила оплата (`payment.received`).
+Слушает события через RabbitMQ (публикует их основной сервис `mgnbvbooking`
+через `booking.core.events.publish_event` в topic exchange `events`, а
+notifications подписывается на очередь `notifications` с routing key `#`)
+и рассылает email-уведомления владельцам объектов: новая бронь
+(`booking.created`), поступила оплата (`payment.received`), код
+подтверждения email (`auth.email_verification`).
 
 ## Локальный запуск
 

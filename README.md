@@ -4,12 +4,13 @@
 календарь занятости, жильцы, договоры, платежи и задолженности.
 Не сервис поиска арендаторов — инструмент учёта уже найденных.
 
-Стек: FastAPI · SQLAlchemy 2.0 (async, asyncpg) · PostgreSQL 15+ (`btree_gist`) · Alembic · JWT · Redis Streams.
+Стек: FastAPI · SQLAlchemy 2.0 (async, asyncpg) · PostgreSQL 15+ (`btree_gist`) · Alembic · JWT · RabbitMQ.
 
 Состоит из двух сервисов:
 - `booking/` — основной API (брони, жильцы, платежи, объекты).
-- `notifications/` — микросервис уведомлений: слушает события в Redis Streams
-  (`booking.created`, `payment.received`) и рассылает email владельцам.
+- `notifications/` — микросервис уведомлений: слушает события через RabbitMQ
+  (topic exchange `events`, очередь `notifications`) — `booking.created`,
+  `payment.received`, `auth.email_verification` — и рассылает email владельцам.
 
 ## Локальный запуск через Docker
 
